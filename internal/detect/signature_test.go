@@ -7,6 +7,7 @@ import (
 
 	"github.com/LeeSeokBln/faultbrief/internal/model"
 	"github.com/LeeSeokBln/faultbrief/internal/rules"
+	"github.com/LeeSeokBln/faultbrief/internal/template"
 )
 
 func loadRules(t *testing.T, yml string) []rules.Rule {
@@ -60,5 +61,27 @@ func TestSignatureMatcherNoHitsNoFindings(t *testing.T) {
 	m.Feed(model.LogRecord{Message: "anything"})
 	if fs := m.Findings(); len(fs) != 0 {
 		t.Fatalf("findings = %d, want 0", len(fs))
+	}
+}
+
+func TestSignatureMatcherTracksMatchedTemplates(t *testing.T) {
+	rs := loadRules(t, `
+- id: oom
+  title: OOM kill
+  severity: critical
+  contains: "Out of memory"
+`)
+	m := NewSignatureMatcher(rs)
+	hit := model.LogRecord{Source: "syslog", Message: "Out of memory: Killed process 42"}
+	m.Feed(hit)
+	m.Feed(model.LogRecord{Source: "syslog", Message: "healthy noise"})
+
+	want := template.Fingerprint("syslog", template.Mask(hit.Message))
+	got := m.MatchedTemplates()
+	if !got[want] {
+		t.Errorf("matched template fingerprint missing: %v", got)
+	}
+	if len(got) != 1 {
+		t.Errorf("expected exactly 1 matched template, got %d", len(got))
 	}
 }

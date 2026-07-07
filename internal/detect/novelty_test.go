@@ -24,7 +24,7 @@ func TestNoveltyDetected(t *testing.T) {
 	for i := 0; i < 4; i++ {
 		acc.Add(model.LogRecord{TS: w.AnalysisFrom.Add(time.Minute), Source: "syslog", Message: "certificate verify failed for backend", Severity: model.SevError})
 	}
-	fs := Novelties(acc, nil, DefaultParams())
+	fs := Novelties(acc, nil, nil, DefaultParams())
 	if len(fs) != 1 {
 		t.Fatalf("findings = %d, want 1", len(fs))
 	}
@@ -40,7 +40,7 @@ func TestNoveltyIgnoresKnownTemplates(t *testing.T) {
 		acc.Add(model.LogRecord{TS: w.BaselineFrom.Add(time.Minute), Source: "syslog", Message: "same thing", Severity: model.SevError})
 		acc.Add(model.LogRecord{TS: w.AnalysisFrom.Add(time.Minute), Source: "syslog", Message: "same thing", Severity: model.SevError})
 	}
-	if fs := Novelties(acc, nil, DefaultParams()); len(fs) != 0 {
+	if fs := Novelties(acc, nil, nil, DefaultParams()); len(fs) != 0 {
 		t.Fatalf("known template flagged as novel: %+v", fs)
 	}
 }
@@ -48,7 +48,7 @@ func TestNoveltyIgnoresKnownTemplates(t *testing.T) {
 func TestNoveltyBelowMinCount(t *testing.T) {
 	acc, w := noveltyAcc(t)
 	acc.Add(model.LogRecord{TS: w.AnalysisFrom.Add(time.Minute), Source: "syslog", Message: "one-off oddity", Severity: model.SevError})
-	if fs := Novelties(acc, nil, DefaultParams()); len(fs) != 0 {
+	if fs := Novelties(acc, nil, nil, DefaultParams()); len(fs) != 0 {
 		t.Fatalf("below-min template flagged: %+v", fs)
 	}
 }
@@ -62,7 +62,7 @@ func TestNoveltyRespectsCache(t *testing.T) {
 	cache := baseline.NewCache("")
 	id := template.Fingerprint("syslog", template.Mask(msg))
 	cache.Remember(id, template.Mask(msg), w.BaselineFrom)
-	if fs := Novelties(acc, cache, DefaultParams()); len(fs) != 0 {
+	if fs := Novelties(acc, cache, nil, DefaultParams()); len(fs) != 0 {
 		t.Fatalf("cached template flagged as novel: %+v", fs)
 	}
 }
@@ -80,11 +80,23 @@ func TestNoveltyCapAndOrdering(t *testing.T) {
 			acc.Add(model.LogRecord{TS: w.AnalysisFrom.Add(time.Minute), Source: "syslog", Message: msg, Severity: sev})
 		}
 	}
-	fs := Novelties(acc, nil, DefaultParams())
+	fs := Novelties(acc, nil, nil, DefaultParams())
 	if len(fs) != 10 {
 		t.Fatalf("findings = %d, want capped at 10", len(fs))
 	}
 	if fs[0].Severity != model.SevCritical {
 		t.Errorf("first finding should be the critical one, got %+v", fs[0])
+	}
+}
+
+func TestNoveltyExcludesSignatureMatchedTemplates(t *testing.T) {
+	acc, w := noveltyAcc(t)
+	msg := "upstream timed out (110: Connection timed out) while reading"
+	for i := 0; i < 4; i++ {
+		acc.Add(model.LogRecord{TS: w.AnalysisFrom.Add(time.Minute), Source: "nginx-error", Message: msg, Severity: model.SevError})
+	}
+	exclude := map[string]bool{template.Fingerprint("nginx-error", template.Mask(msg)): true}
+	if fs := Novelties(acc, nil, exclude, DefaultParams()); len(fs) != 0 {
+		t.Fatalf("signature-matched template must not be reported as novel: %+v", fs)
 	}
 }

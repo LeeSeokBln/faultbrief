@@ -1,7 +1,7 @@
 FAULTBRIEF — 장애 브리핑
 분석 구간: 2026-07-07 09:00 → 2026-07-07 10:00 (베이스라인: 직전 24h0m0s)
 소스: journald ✓ (1) · syslog ✓ (69) · nginx-access ✓ (260) · nginx-error ✓ (3)
-레코드: 104 · 발견: 10
+레코드: 104 · 발견: 9
 
 [심각] 시그니처 oom-kill — OOM killer terminated a process (×2)
   최초: 09:12:00 · 최종: 09:14:00 · 유닛: kernel · syslog
@@ -34,13 +34,6 @@ FAULTBRIEF — 장애 브리핑
   > certificate verify failed for backend api.internal
   > certificate verify failed for backend api.internal
   > certificate verify failed for backend api.internal
-
-[에러] 신규 패턴 366ee85b5c1814d8 — upstream timed out (<NUM>: Connection timed out) while reading response header from upstream (×3)
-  최초: 09:20:00 · 최종: 09:22:00 · 유닛: nginx · nginx-error
-  new pattern: 3 occurrence(s), not seen in baseline
-  > upstream timed out (110: Connection timed out) while reading response header from upstream
-  > upstream timed out (110: Connection timed out) while reading response header from upstream
-  > upstream timed out (110: Connection timed out) while reading response header from upstream
 
 [에러] 시그니처 nginx-upstream-timeout — nginx upstream timed out (×3)
   최초: 09:20:00 · 최종: 09:22:00 · 유닛: nginx · nginx-error

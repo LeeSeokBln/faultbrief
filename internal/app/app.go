@@ -114,7 +114,7 @@ func Run(ctx context.Context, opts Options) int {
 	findings := matcher.Findings()
 	params := detect.DefaultParams()
 	findings = append(findings, detect.Spikes(acc, params)...)
-	findings = append(findings, detect.Novelties(acc, cache, params)...)
+	findings = append(findings, detect.Novelties(acc, cache, matcher.MatchedTemplates(), params)...)
 	detect.Rank(findings)
 	findings = detect.FilterMinSeverity(findings, minSev)
 

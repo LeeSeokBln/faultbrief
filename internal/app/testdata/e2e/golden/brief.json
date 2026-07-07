@@ -118,24 +118,6 @@
       "last_ts": "2026-07-07T09:33:00Z"
     },
     {
-      "kind": "novelty",
-      "rule_id": "366ee85b5c1814d8",
-      "severity": "error",
-      "title": "upstream timed out (\u003cNUM\u003e: Connection timed out) while reading response header from upstream",
-      "detail": "new pattern: 3 occurrence(s), not seen in baseline",
-      "count": 3,
-      "score": 3,
-      "source": "nginx-error",
-      "unit": "nginx",
-      "samples": [
-        "upstream timed out (110: Connection timed out) while reading response header from upstream",
-        "upstream timed out (110: Connection timed out) while reading response header from upstream",
-        "upstream timed out (110: Connection timed out) while reading response header from upstream"
-      ],
-      "first_ts": "2026-07-07T09:20:00Z",
-      "last_ts": "2026-07-07T09:22:00Z"
-    },
-    {
       "kind": "signature",
       "rule_id": "nginx-upstream-timeout",
       "severity": "error",

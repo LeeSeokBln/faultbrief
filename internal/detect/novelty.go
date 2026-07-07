@@ -9,8 +9,10 @@ import (
 )
 
 // Novelties reports templates present in the analysis window but absent from
-// both the baseline window and the optional long-term cache.
-func Novelties(acc *baseline.Accumulator, cache *baseline.Cache, p Params) []model.Finding {
+// both the baseline window and the optional long-term cache. Templates in
+// exclude (signature-matched lines) are skipped: they are already explained
+// by a higher-signal finding.
+func Novelties(acc *baseline.Accumulator, cache *baseline.Cache, exclude map[string]bool, p Params) []model.Finding {
 	var candidates []*baseline.TemplateStats
 	for id, st := range acc.Analysis {
 		if st.Count < p.NoveltyMin {
@@ -20,6 +22,9 @@ func Novelties(acc *baseline.Accumulator, cache *baseline.Cache, p Params) []mod
 			continue
 		}
 		if cache != nil && cache.Has(id) {
+			continue
+		}
+		if exclude[id] {
 			continue
 		}
 		candidates = append(candidates, st)

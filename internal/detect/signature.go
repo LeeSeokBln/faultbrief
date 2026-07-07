@@ -5,6 +5,7 @@ import (
 
 	"github.com/LeeSeokBln/faultbrief/internal/model"
 	"github.com/LeeSeokBln/faultbrief/internal/rules"
+	"github.com/LeeSeokBln/faultbrief/internal/template"
 )
 
 type sigHit struct {
@@ -19,22 +20,29 @@ type sigHit struct {
 
 // SignatureMatcher accumulates rule hits over analysis-window records.
 type SignatureMatcher struct {
-	rules []rules.Rule
-	hits  map[string]*sigHit
-	order []string // first-hit order for deterministic output
+	rules      []rules.Rule
+	hits       map[string]*sigHit
+	order      []string        // first-hit order for deterministic output
+	matchedTpl map[string]bool // template fingerprints of matched records
 }
 
 func NewSignatureMatcher(rs []rules.Rule) *SignatureMatcher {
-	return &SignatureMatcher{rules: rs, hits: map[string]*sigHit{}}
+	return &SignatureMatcher{rules: rs, hits: map[string]*sigHit{}, matchedTpl: map[string]bool{}}
 }
+
+// MatchedTemplates returns the fingerprints of every template that produced
+// a signature hit, so the novelty detector can skip already-explained lines.
+func (m *SignatureMatcher) MatchedTemplates() map[string]bool { return m.matchedTpl }
 
 // Feed matches one analysis-window record against every rule.
 func (m *SignatureMatcher) Feed(rec model.LogRecord) {
+	matched := false
 	for i := range m.rules {
 		r := &m.rules[i]
 		if !r.Matches(rec) {
 			continue
 		}
+		matched = true
 		h, ok := m.hits[r.ID]
 		if !ok {
 			h = &sigHit{rule: r, unit: rec.Unit, source: rec.Source, first: rec, last: rec}
@@ -51,6 +59,9 @@ func (m *SignatureMatcher) Feed(rec model.LogRecord) {
 		if len(h.samples) < 3 {
 			h.samples = append(h.samples, rec.Message)
 		}
+	}
+	if matched {
+		m.matchedTpl[template.Fingerprint(rec.Source, template.Mask(rec.Message))] = true
 	}
 }
 
