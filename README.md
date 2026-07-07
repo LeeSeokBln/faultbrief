@@ -88,7 +88,7 @@ Reading `/var/log` usually requires membership in the `adm` group or sudo.
 
 ## Example output
 
-Real output (from the test fixtures):
+Abridged real output from the test fixtures (3 of 8 findings shown):
 
 ```
 FAULTBRIEF — incident brief
@@ -181,6 +181,16 @@ Add your own signatures in a YAML file:
 Load with `--rules ./my-rules.yaml`. Exactly one of `contains`/`regex` per
 rule. Builtin rules are always loaded.
 
+## Notes and limitations
+
+- nginx **error** log timestamps carry no timezone; faultbrief parses them in
+  the machine's local time. Analyze error logs on the host that produced them
+  (or with a matching TZ) — copied-across-timezones logs will miss the window.
+- nginx **access** logs are parsed in the default `combined` format only.
+  Custom `log_format` support is planned.
+- For remote LLM endpoints use `https`; `http` base URLs are intended for
+  loopback services like Ollama (API key and log excerpts travel to that URL).
+
 ## 한국어
 
 리눅스 로그를 장애 브리핑으로. 명령어 하나, 데몬 없음, 사전 설정 없음.
@@ -268,7 +278,7 @@ faultbrief [플래그]
 
 ### 출력 예시
 
-테스트 픽스처 기준 실제 출력:
+테스트 픽스처 기준 실제 출력 (8건 중 3건 발췌):
 
 ```
 FAULTBRIEF — 장애 브리핑
@@ -309,6 +319,15 @@ faultbrief --since 1h --lang ko --llm
 
 `--lang ko`면 AI 브리핑도 한국어로 나옵니다: 상황 요약, 원인 가설,
 영향 범위, 다음 확인 커맨드 순.
+
+#### OpenAI API
+
+```bash
+export OPENAI_API_KEY=sk-...
+export FAULTBRIEF_LLM_PROVIDER=openai
+export FAULTBRIEF_LLM_MODEL=gpt-4o-mini
+faultbrief --since 1h --lang ko --llm
+```
 
 #### 로컬 Ollama — 클라우드 없이
 
@@ -354,6 +373,15 @@ llm:
 
 `--rules ./my-rules.yaml`로 로드. 규칙마다 `contains`/`regex` 중 정확히
 하나만. 내장 규칙은 항상 함께 로드됩니다.
+
+### 참고·제한사항
+
+- nginx **error** 로그 타임스탬프에는 타임존이 없어 실행 머신의 로컬 시간으로
+  해석합니다. 에러 로그는 생성된 서버(또는 같은 TZ)에서 분석하세요.
+- nginx **access** 로그는 기본 `combined` 포맷만 지원합니다. 커스텀
+  `log_format`은 추후 지원 예정.
+- 원격 LLM 엔드포인트는 `https`를 쓰세요. `http`는 Ollama 같은 로컬
+  서비스용입니다 (API 키와 로그 발췌가 해당 URL로 전송됨).
 
 ### cron 연동 예시
 

@@ -58,21 +58,38 @@ func (c *Cache) Remember(id, masked string, ts time.Time) {
 	c.Seen[id] = e
 }
 
-// Save writes atomically (tmp + rename).
+// Save writes atomically (unique tmp + rename). The tmp name must be unique
+// per process: overlapping cron invocations sharing one ".tmp" would clobber
+// each other's data mid-write.
 func (c *Cache) Save() error {
 	if c.Path == "" {
 		return nil
 	}
-	if err := os.MkdirAll(filepath.Dir(c.Path), 0o755); err != nil {
+	dir := filepath.Dir(c.Path)
+	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return err
 	}
 	data, err := json.MarshalIndent(c, "", "  ")
 	if err != nil {
 		return err
 	}
-	tmp := c.Path + ".tmp"
-	if err := os.WriteFile(tmp, data, 0o644); err != nil {
+	tmp, err := os.CreateTemp(dir, ".patterns-*.tmp")
+	if err != nil {
 		return err
 	}
-	return os.Rename(tmp, c.Path)
+	if _, err := tmp.Write(data); err != nil {
+		tmp.Close()
+		os.Remove(tmp.Name())
+		return err
+	}
+	if err := tmp.Chmod(0o644); err != nil {
+		tmp.Close()
+		os.Remove(tmp.Name())
+		return err
+	}
+	if err := tmp.Close(); err != nil {
+		os.Remove(tmp.Name())
+		return err
+	}
+	return os.Rename(tmp.Name(), c.Path)
 }

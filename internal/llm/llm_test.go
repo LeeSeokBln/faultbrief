@@ -126,3 +126,19 @@ func TestHTTPErrorSurfaced(t *testing.T) {
 		t.Fatal("503 must surface as error")
 	}
 }
+
+func TestBaseURLValidation(t *testing.T) {
+	lookup := func(string) string { return "key" }
+	bad := []string{"file:///etc/passwd", "ftp://host", "gopher://169.254.169.254", "https://", "://bad"}
+	for _, u := range bad {
+		if _, err := New(config.LLM{Provider: "openai", Model: "m", BaseURL: u}, lookup); err == nil {
+			t.Errorf("base_url %q must be rejected", u)
+		}
+	}
+	good := []string{"", "http://localhost:11434", "https://api.example.com"}
+	for _, u := range good {
+		if _, err := New(config.LLM{Provider: "openai", Model: "m", BaseURL: u}, lookup); err != nil {
+			t.Errorf("base_url %q should be accepted: %v", u, err)
+		}
+	}
+}

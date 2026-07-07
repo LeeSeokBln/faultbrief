@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/LeeSeokBln/faultbrief/internal/config"
@@ -26,6 +27,9 @@ type Provider interface {
 
 // New builds a provider from config. keyLookup abstracts os.Getenv for tests.
 func New(cfg config.LLM, keyLookup func(string) string) (Provider, error) {
+	if err := validateBaseURL(cfg.BaseURL); err != nil {
+		return nil, err
+	}
 	switch cfg.Provider {
 	case "anthropic":
 		key := keyLookup("ANTHROPIC_API_KEY")
@@ -46,6 +50,27 @@ func New(cfg config.LLM, keyLookup func(string) string) (Provider, error) {
 
 func httpClient() *http.Client {
 	return &http.Client{Timeout: 90 * time.Second}
+}
+
+// validateBaseURL restricts custom endpoints to http/https with a host.
+// API keys and log excerpts travel to this URL: exotic schemes are always a
+// bug, and http is intended for loopback endpoints such as Ollama — use
+// https for anything remote.
+func validateBaseURL(raw string) error {
+	if raw == "" {
+		return nil
+	}
+	u, err := url.Parse(raw)
+	if err != nil {
+		return fmt.Errorf("invalid llm base_url %q: %w", raw, err)
+	}
+	if u.Scheme != "http" && u.Scheme != "https" {
+		return fmt.Errorf("llm base_url must use http or https, got %q", u.Scheme)
+	}
+	if u.Host == "" {
+		return fmt.Errorf("llm base_url %q has no host", raw)
+	}
+	return nil
 }
 
 const systemPrompt = `You are an experienced SRE incident analyst. You receive a JSON report produced by a log-analysis rule engine (signature matches, frequency spikes, novel patterns). Write a short incident briefing with exactly these sections:
