@@ -101,8 +101,14 @@ func TestRenderJSON(t *testing.T) {
 	if got["records"] != float64(1234) {
 		t.Errorf("records = %v", got["records"])
 	}
-	fs := got["findings"].([]any)
-	f0 := fs[0].(map[string]any)
+	fs, ok := got["findings"].([]any)
+	if !ok || len(fs) == 0 {
+		t.Fatal("findings is not an array or is empty")
+	}
+	f0, ok := fs[0].(map[string]any)
+	if !ok {
+		t.Fatalf("first finding is not a map, got: %T", fs[0])
+	}
 	if f0["severity"] != "critical" || f0["rule_id"] != "oom-kill" {
 		t.Errorf("finding json = %v", f0)
 	}
@@ -136,7 +142,9 @@ func TestParseFailureWarning(t *testing.T) {
 	// 1% failure rate must not warn.
 	r.Sources = []SourceStat{{Name: "syslog", Lines: 100, Parsed: 99, Failed: 1}}
 	buf.Reset()
-	RenderText(&buf, r, "en", false)
+	if err := RenderText(&buf, r, "en", false); err != nil {
+		t.Fatal(err)
+	}
 	if strings.Contains(buf.String(), "high parse-failure rate") {
 		t.Errorf("warning fired below threshold:\n%s", buf.String())
 	}
@@ -146,7 +154,9 @@ func TestLLMBriefSectionRendered(t *testing.T) {
 	r := sampleReport()
 	r.LLMBrief = "Everything is on fire because of X."
 	var buf bytes.Buffer
-	RenderText(&buf, r, "en", false)
+	if err := RenderText(&buf, r, "en", false); err != nil {
+		t.Fatal(err)
+	}
 	if !strings.Contains(buf.String(), "on fire because of X") {
 		t.Error("LLM brief not rendered")
 	}
