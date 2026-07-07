@@ -1,0 +1,3 @@
+2026/07/07 09:20:00 [error] 88#0: *100 upstream timed out (110: Connection timed out) while reading response header from upstream
+2026/07/07 09:21:00 [error] 88#0: *101 upstream timed out (110: Connection timed out) while reading response header from upstream
+2026/07/07 09:22:00 [error] 88#0: *102 upstream timed out (110: Connection timed out) while reading response header from upstream

@@ -1,0 +1,152 @@
+# Curated incident signatures. Every rule needs an example line that the test
+# suite verifies against the matcher. Keep hints as copy-pasteable commands.
+
+- id: oom-kill
+  title: "OOM killer terminated a process"
+  severity: critical
+  contains: "Out of memory: Killed process"
+  hint: "free -h; dmesg | grep -i oom; check the unit's memory limits"
+  example: "kernel: Out of memory: Killed process 1234 (myapp) total-vm:2048kB"
+
+- id: oom-invoked
+  title: "A process invoked the OOM killer"
+  severity: critical
+  contains: "invoked oom-killer"
+  hint: "free -h; dmesg | grep -i oom"
+  example: "kernel: myapp invoked oom-killer: gfp_mask=0x140dca, order=0"
+
+- id: oom-cgroup
+  title: "Memory cgroup out of memory"
+  severity: critical
+  contains: "Memory cgroup out of memory"
+  hint: "systemctl show <unit> -p MemoryMax; raise the limit or fix the leak"
+  example: "kernel: Memory cgroup out of memory: Killed process 4321 (worker)"
+
+- id: kernel-panic
+  title: "Kernel panic"
+  severity: critical
+  contains: "Kernel panic"
+  hint: "Check console/IPMI logs; kernel or hardware fault likely"
+  example: "kernel: Kernel panic - not syncing: Fatal exception"
+
+- id: general-protection-fault
+  title: "General protection fault"
+  severity: critical
+  contains: "general protection fault"
+  hint: "dmesg | tail; suspect bad memory or a kernel/driver bug"
+  example: "kernel: traps: myapp[999] general protection fault ip:7f3 sp:7ffd"
+
+- id: segfault
+  title: "Process segfaulted"
+  severity: error
+  regex: "segfault at|signal 11|SIGSEGV"
+  hint: "coredumpctl list; check recent deploys of the crashing binary"
+  example: "kernel: myapp[2211]: segfault at 0 ip 000055d6 sp 00007ffc error 4"
+
+- id: disk-full
+  title: "No space left on device"
+  severity: critical
+  regex: "(?i)no space left on device|ENOSPC"
+  hint: "df -h; du -xsh /var/* | sort -h; clear logs or grow the volume"
+  example: "myapp[321]: write /var/lib/app/data: no space left on device"
+
+- id: fs-readonly
+  title: "Filesystem remounted read-only"
+  severity: critical
+  regex: "(?i)remount(ing|ed)? (filesystem )?read-only|read-only file system"
+  hint: "dmesg | grep -i ext4; fsck likely required — storage fault suspected"
+  example: "kernel: EXT4-fs (sda1): Remounting filesystem read-only"
+
+- id: io-error
+  title: "Disk I/O error"
+  severity: critical
+  regex: "(?i)buffer i/o error|i/o error, dev|blk_update_request: i/o error|nvme.*(timeout|aborting)"
+  hint: "smartctl -a /dev/sdX; check cloud volume health; plan disk replacement"
+  example: "kernel: blk_update_request: I/O error, dev sda, sector 12345"
+
+- id: hung-task
+  title: "Task blocked for too long (possible I/O stall)"
+  severity: error
+  contains: "blocked for more than"
+  hint: "Check iowait (vmstat 1), storage latency, and NFS mounts"
+  example: "kernel: INFO: task jbd2/sda1-8:311 blocked for more than 120 seconds."
+
+- id: systemd-unit-failed
+  title: "systemd unit failed"
+  severity: error
+  regex: "(?i)failed to start|entered failed state|failed with result"
+  hint: "systemctl status <unit>; journalctl -u <unit> -n 50"
+  example: "systemd[1]: myapp.service: Failed with result 'exit-code'."
+
+- id: systemd-restart-loop
+  title: "systemd unit restart loop"
+  severity: error
+  contains: "Start request repeated too quickly"
+  hint: "journalctl -u <unit> -n 100; fix the crash then systemctl reset-failed"
+  example: "systemd[1]: myapp.service: Start request repeated too quickly."
+
+- id: conntrack-full
+  title: "Connection tracking table full (dropping packets)"
+  severity: critical
+  contains: "nf_conntrack: table full"
+  hint: "sysctl net.netfilter.nf_conntrack_max; raise it or reduce connection churn"
+  example: "kernel: nf_conntrack: table full, dropping packet"
+
+- id: ssh-auth-fail
+  title: "SSH authentication failures"
+  severity: warning
+  contains: "Failed password for"
+  hint: "Check fail2ban; lastb | head; consider disabling password auth"
+  example: "sshd[1543]: Failed password for root from 203.0.113.9 port 51023 ssh2"
+
+- id: ssh-break-in
+  title: "SSH possible break-in attempt"
+  severity: warning
+  contains: "POSSIBLE BREAK-IN ATTEMPT"
+  hint: "Reverse-DNS mismatch flood; verify sshd exposure and fail2ban"
+  example: "sshd[1543]: reverse mapping checking failed - POSSIBLE BREAK-IN ATTEMPT!"
+
+- id: too-many-open-files
+  title: "File descriptor exhaustion"
+  severity: error
+  contains: "Too many open files"
+  hint: "ls /proc/<pid>/fd | wc -l; raise LimitNOFILE or fix the fd leak"
+  example: "myapp[882]: accept4: too many open files -- Too many open files"
+
+- id: tls-cert-expiry
+  title: "TLS certificate expired or expiring"
+  severity: warning
+  regex: "(?i)certificate (has expired|will expire|verify failed.*expired)"
+  hint: "openssl x509 -enddate -noout -in <cert>; renew (certbot renew)"
+  example: "myapp[7]: x509: certificate has expired or is not yet valid"
+
+- id: nginx-upstream-timeout
+  title: "nginx upstream timed out"
+  severity: error
+  source: nginx-error
+  contains: "upstream timed out"
+  hint: "Check upstream app latency/health; consider proxy_read_timeout"
+  example: "upstream timed out (110: Connection timed out) while reading response header from upstream"
+
+- id: nginx-upstream-refused
+  title: "nginx cannot connect to upstream"
+  severity: error
+  source: nginx-error
+  regex: "connect\\(\\) failed .* while connecting to upstream"
+  hint: "Is the upstream service running? systemctl status <app>; check its port"
+  example: "connect() failed (111: Connection refused) while connecting to upstream"
+
+- id: nginx-no-live-upstreams
+  title: "nginx has no live upstreams"
+  severity: critical
+  source: nginx-error
+  contains: "no live upstreams"
+  hint: "All backends down — check the upstream service and health checks"
+  example: "no live upstreams while connecting to upstream"
+
+- id: nginx-worker-exit
+  title: "nginx worker crashed"
+  severity: critical
+  regex: "worker process \\d+ exited on signal"
+  hint: "Check nginx error log around the crash; suspect a bad module or OOM"
+  example: "worker process 1234 exited on signal 11"

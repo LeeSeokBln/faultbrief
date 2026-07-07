@@ -1,0 +1,69 @@
+Jul  6 09:00:00 web1 app: heartbeat ok
+Jul  6 10:00:00 web1 app: heartbeat ok
+Jul  6 11:00:00 web1 app: heartbeat ok
+Jul  6 12:00:00 web1 app: heartbeat ok
+Jul  6 13:00:00 web1 app: heartbeat ok
+Jul  6 14:00:00 web1 app: heartbeat ok
+Jul  6 15:00:00 web1 app: heartbeat ok
+Jul  6 16:00:00 web1 app: heartbeat ok
+Jul  6 17:00:00 web1 app: heartbeat ok
+Jul  6 18:00:00 web1 app: heartbeat ok
+Jul  6 19:00:00 web1 app: heartbeat ok
+Jul  6 20:00:00 web1 app: heartbeat ok
+Jul  6 21:00:00 web1 app: heartbeat ok
+Jul  6 22:00:00 web1 app: heartbeat ok
+Jul  6 23:00:00 web1 app: heartbeat ok
+Jul  7 00:00:00 web1 app: heartbeat ok
+Jul  7 01:00:00 web1 app: heartbeat ok
+Jul  7 02:00:00 web1 app: heartbeat ok
+Jul  7 03:00:00 web1 app: heartbeat ok
+Jul  7 04:00:00 web1 app: heartbeat ok
+Jul  7 05:00:00 web1 app: heartbeat ok
+Jul  7 06:00:00 web1 app: heartbeat ok
+Jul  7 07:00:00 web1 app: heartbeat ok
+Jul  7 08:00:00 web1 app: heartbeat ok
+Jul  7 09:00:00 web1 app: heartbeat ok
+Jul  7 09:15:00 web1 app: heartbeat ok
+Jul  7 09:30:00 web1 app: heartbeat ok
+Jul  7 09:45:00 web1 app: heartbeat ok
+Jul  6 09:00:00 web1 myapp[77]: error: pg query timeout after 5000 ms
+Jul  6 14:00:00 web1 myapp[77]: error: pg query timeout after 5000 ms
+Jul  6 19:00:00 web1 myapp[77]: error: pg query timeout after 5000 ms
+Jul  7 00:00:00 web1 myapp[77]: error: pg query timeout after 5000 ms
+Jul  7 05:00:00 web1 myapp[77]: error: pg query timeout after 5000 ms
+Jul  7 09:00:00 web1 myapp[77]: error: pg query timeout after 5000 ms
+Jul  7 09:02:00 web1 myapp[77]: error: pg query timeout after 5000 ms
+Jul  7 09:04:00 web1 myapp[77]: error: pg query timeout after 5000 ms
+Jul  7 09:06:00 web1 myapp[77]: error: pg query timeout after 5000 ms
+Jul  7 09:08:00 web1 myapp[77]: error: pg query timeout after 5000 ms
+Jul  7 09:10:00 web1 myapp[77]: error: pg query timeout after 5000 ms
+Jul  7 09:12:00 web1 myapp[77]: error: pg query timeout after 5000 ms
+Jul  7 09:14:00 web1 myapp[77]: error: pg query timeout after 5000 ms
+Jul  7 09:16:00 web1 myapp[77]: error: pg query timeout after 5000 ms
+Jul  7 09:18:00 web1 myapp[77]: error: pg query timeout after 5000 ms
+Jul  7 09:20:00 web1 myapp[77]: error: pg query timeout after 5000 ms
+Jul  7 09:22:00 web1 myapp[77]: error: pg query timeout after 5000 ms
+Jul  7 09:24:00 web1 myapp[77]: error: pg query timeout after 5000 ms
+Jul  7 09:26:00 web1 myapp[77]: error: pg query timeout after 5000 ms
+Jul  7 09:28:00 web1 myapp[77]: error: pg query timeout after 5000 ms
+Jul  7 09:30:00 web1 myapp[77]: error: pg query timeout after 5000 ms
+Jul  7 09:32:00 web1 myapp[77]: error: pg query timeout after 5000 ms
+Jul  7 09:34:00 web1 myapp[77]: error: pg query timeout after 5000 ms
+Jul  7 09:36:00 web1 myapp[77]: error: pg query timeout after 5000 ms
+Jul  7 09:38:00 web1 myapp[77]: error: pg query timeout after 5000 ms
+Jul  7 09:40:00 web1 myapp[77]: error: pg query timeout after 5000 ms
+Jul  7 09:42:00 web1 myapp[77]: error: pg query timeout after 5000 ms
+Jul  7 09:44:00 web1 myapp[77]: error: pg query timeout after 5000 ms
+Jul  7 09:46:00 web1 myapp[77]: error: pg query timeout after 5000 ms
+Jul  7 09:48:00 web1 myapp[77]: error: pg query timeout after 5000 ms
+Jul  7 09:50:00 web1 myapp[77]: error: pg query timeout after 5000 ms
+Jul  7 09:52:00 web1 myapp[77]: error: pg query timeout after 5000 ms
+Jul  7 09:54:00 web1 myapp[77]: error: pg query timeout after 5000 ms
+Jul  7 09:56:00 web1 myapp[77]: error: pg query timeout after 5000 ms
+Jul  7 09:58:00 web1 myapp[77]: error: pg query timeout after 5000 ms
+Jul  7 09:12:00 web1 kernel: Out of memory: Killed process 1234 (myapp) total-vm:204800kB
+Jul  7 09:14:00 web1 kernel: Out of memory: Killed process 1301 (myapp) total-vm:204800kB
+Jul  7 09:30:00 web1 myapp[77]: certificate verify failed for backend api.internal
+Jul  7 09:31:00 web1 myapp[77]: certificate verify failed for backend api.internal
+Jul  7 09:32:00 web1 myapp[77]: certificate verify failed for backend api.internal
+Jul  7 09:33:00 web1 myapp[77]: certificate verify failed for backend api.internal
