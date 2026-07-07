@@ -1,0 +1,205 @@
+{
+  "generated_at": "2026-07-07T10:00:00Z",
+  "window_from": "2026-07-07T09:00:00Z",
+  "window_to": "2026-07-07T10:00:00Z",
+  "baseline_from": "2026-07-06T09:00:00Z",
+  "baseline_to": "2026-07-07T09:00:00Z",
+  "records": 104,
+  "sources": [
+    {
+      "name": "journald",
+      "lines": 1,
+      "parsed": 1,
+      "failed": 0
+    },
+    {
+      "name": "syslog",
+      "lines": 69,
+      "parsed": 69,
+      "failed": 0
+    },
+    {
+      "name": "nginx-access",
+      "lines": 260,
+      "parsed": 260,
+      "failed": 0
+    },
+    {
+      "name": "nginx-error",
+      "lines": 3,
+      "parsed": 3,
+      "failed": 0
+    }
+  ],
+  "findings": [
+    {
+      "kind": "signature",
+      "rule_id": "oom-kill",
+      "severity": "critical",
+      "title": "OOM killer terminated a process",
+      "detail": "matched 2 time(s)",
+      "hint": "free -h; dmesg | grep -i oom; check the unit's memory limits",
+      "count": 2,
+      "score": 2,
+      "source": "syslog",
+      "unit": "kernel",
+      "samples": [
+        "Out of memory: Killed process 1234 (myapp) total-vm:204800kB",
+        "Out of memory: Killed process 1301 (myapp) total-vm:204800kB"
+      ],
+      "first_ts": "2026-07-07T09:12:00Z",
+      "last_ts": "2026-07-07T09:14:00Z"
+    },
+    {
+      "kind": "spike",
+      "rule_id": "nginx-5xx-rate",
+      "severity": "error",
+      "title": "nginx 5xx error rate is high",
+      "detail": "12 of 60 requests failed (20.0%), baseline 0.0%",
+      "count": 12,
+      "score": 20,
+      "source": "nginx-access",
+      "unit": "nginx",
+      "first_ts": "2026-07-07T09:00:00Z",
+      "last_ts": "2026-07-07T10:00:00Z"
+    },
+    {
+      "kind": "novelty",
+      "rule_id": "7bd92f741c1ce2d4",
+      "severity": "error",
+      "title": "GET \u003cPATH\u003e [5xx]",
+      "detail": "new pattern: 12 occurrence(s), not seen in baseline",
+      "count": 12,
+      "score": 12,
+      "source": "nginx-access",
+      "unit": "nginx",
+      "samples": [
+        "GET /api/list [5xx]",
+        "GET /api/list [5xx]",
+        "GET /api/list [5xx]"
+      ],
+      "first_ts": "2026-07-07T09:00:00Z",
+      "last_ts": "2026-07-07T09:55:00Z"
+    },
+    {
+      "kind": "spike",
+      "rule_id": "2fa0ade5fedf824e",
+      "severity": "error",
+      "title": "error: pg query timeout after \u003cNUM\u003e ms",
+      "detail": "30 occurrences (2.5/bucket) vs baseline 0.02/bucket — z=5.0, ×50.0",
+      "count": 30,
+      "score": 4.965277777777778,
+      "source": "syslog",
+      "unit": "myapp",
+      "samples": [
+        "error: pg query timeout after 5000 ms",
+        "error: pg query timeout after 5000 ms",
+        "error: pg query timeout after 5000 ms"
+      ],
+      "first_ts": "2026-07-07T09:00:00Z",
+      "last_ts": "2026-07-07T09:58:00Z"
+    },
+    {
+      "kind": "novelty",
+      "rule_id": "740572d9d7c336f5",
+      "severity": "error",
+      "title": "certificate verify failed for backend api.internal",
+      "detail": "new pattern: 4 occurrence(s), not seen in baseline",
+      "count": 4,
+      "score": 4,
+      "source": "syslog",
+      "unit": "myapp",
+      "samples": [
+        "certificate verify failed for backend api.internal",
+        "certificate verify failed for backend api.internal",
+        "certificate verify failed for backend api.internal"
+      ],
+      "first_ts": "2026-07-07T09:30:00Z",
+      "last_ts": "2026-07-07T09:33:00Z"
+    },
+    {
+      "kind": "novelty",
+      "rule_id": "366ee85b5c1814d8",
+      "severity": "error",
+      "title": "upstream timed out (\u003cNUM\u003e: Connection timed out) while reading response header from upstream",
+      "detail": "new pattern: 3 occurrence(s), not seen in baseline",
+      "count": 3,
+      "score": 3,
+      "source": "nginx-error",
+      "unit": "nginx",
+      "samples": [
+        "upstream timed out (110: Connection timed out) while reading response header from upstream",
+        "upstream timed out (110: Connection timed out) while reading response header from upstream",
+        "upstream timed out (110: Connection timed out) while reading response header from upstream"
+      ],
+      "first_ts": "2026-07-07T09:20:00Z",
+      "last_ts": "2026-07-07T09:22:00Z"
+    },
+    {
+      "kind": "signature",
+      "rule_id": "nginx-upstream-timeout",
+      "severity": "error",
+      "title": "nginx upstream timed out",
+      "detail": "matched 3 time(s)",
+      "hint": "Check upstream app latency/health; consider proxy_read_timeout",
+      "count": 3,
+      "score": 3,
+      "source": "nginx-error",
+      "unit": "nginx",
+      "samples": [
+        "upstream timed out (110: Connection timed out) while reading response header from upstream",
+        "upstream timed out (110: Connection timed out) while reading response header from upstream",
+        "upstream timed out (110: Connection timed out) while reading response header from upstream"
+      ],
+      "first_ts": "2026-07-07T09:20:00Z",
+      "last_ts": "2026-07-07T09:22:00Z"
+    },
+    {
+      "kind": "signature",
+      "rule_id": "systemd-unit-failed",
+      "severity": "error",
+      "title": "systemd unit failed",
+      "detail": "matched 1 time(s)",
+      "hint": "systemctl status \u003cunit\u003e; journalctl -u \u003cunit\u003e -n 50",
+      "count": 1,
+      "score": 1,
+      "source": "journald",
+      "unit": "myapp.service",
+      "samples": [
+        "myapp.service: Failed with result 'exit-code'."
+      ],
+      "first_ts": "2026-07-07T09:40:00Z",
+      "last_ts": "2026-07-07T09:40:00Z"
+    },
+    {
+      "kind": "spike",
+      "rule_id": "error-rate",
+      "severity": "warning",
+      "title": "Overall error rate spiked",
+      "detail": "50 error-level records (4.2/bucket) vs baseline 0.02/bucket — z=8.3, ×83.3",
+      "count": 50,
+      "score": 8.298611111111112,
+      "source": "all",
+      "first_ts": "2026-07-07T09:00:00Z",
+      "last_ts": "2026-07-07T10:00:00Z"
+    },
+    {
+      "kind": "spike",
+      "rule_id": "dc0f257a9b2490f3",
+      "severity": "warning",
+      "title": "GET \u003cPATH\u003e [2xx]",
+      "detail": "48 occurrences (4.0/bucket) vs baseline 0.69/bucket — z=6.6, ×5.8",
+      "count": 48,
+      "score": 6.611111111111111,
+      "source": "nginx-access",
+      "unit": "nginx",
+      "samples": [
+        "GET /api/list [2xx]",
+        "GET /api/list [2xx]",
+        "GET /api/list [2xx]"
+      ],
+      "first_ts": "2026-07-07T09:01:00Z",
+      "last_ts": "2026-07-07T09:59:00Z"
+    }
+  ]
+}

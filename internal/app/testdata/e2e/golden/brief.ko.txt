@@ -1,0 +1,69 @@
+FAULTBRIEF — 장애 브리핑
+분석 구간: 2026-07-07 09:00 → 2026-07-07 10:00 (베이스라인: 직전 24h0m0s)
+소스: journald ✓ (1) · syslog ✓ (69) · nginx-access ✓ (260) · nginx-error ✓ (3)
+레코드: 104 · 발견: 10
+
+[심각] 시그니처 oom-kill — OOM killer terminated a process (×2)
+  최초: 09:12:00 · 최종: 09:14:00 · 유닛: kernel · syslog
+  matched 2 time(s)
+  > Out of memory: Killed process 1234 (myapp) total-vm:204800kB
+  > Out of memory: Killed process 1301 (myapp) total-vm:204800kB
+  힌트: free -h; dmesg | grep -i oom; check the unit's memory limits
+
+[에러] 스파이크 nginx-5xx-rate — nginx 5xx error rate is high (×12)
+  최초: 09:00:00 · 최종: 10:00:00 · 유닛: nginx · nginx-access
+  12 of 60 requests failed (20.0%), baseline 0.0%
+
+[에러] 신규 패턴 7bd92f741c1ce2d4 — GET <PATH> [5xx] (×12)
+  최초: 09:00:00 · 최종: 09:55:00 · 유닛: nginx · nginx-access
+  new pattern: 12 occurrence(s), not seen in baseline
+  > GET /api/list [5xx]
+  > GET /api/list [5xx]
+  > GET /api/list [5xx]
+
+[에러] 스파이크 2fa0ade5fedf824e — error: pg query timeout after <NUM> ms (×30)
+  최초: 09:00:00 · 최종: 09:58:00 · 유닛: myapp · syslog
+  30 occurrences (2.5/bucket) vs baseline 0.02/bucket — z=5.0, ×50.0
+  > error: pg query timeout after 5000 ms
+  > error: pg query timeout after 5000 ms
+  > error: pg query timeout after 5000 ms
+
+[에러] 신규 패턴 740572d9d7c336f5 — certificate verify failed for backend api.internal (×4)
+  최초: 09:30:00 · 최종: 09:33:00 · 유닛: myapp · syslog
+  new pattern: 4 occurrence(s), not seen in baseline
+  > certificate verify failed for backend api.internal
+  > certificate verify failed for backend api.internal
+  > certificate verify failed for backend api.internal
+
+[에러] 신규 패턴 366ee85b5c1814d8 — upstream timed out (<NUM>: Connection timed out) while reading response header from upstream (×3)
+  최초: 09:20:00 · 최종: 09:22:00 · 유닛: nginx · nginx-error
+  new pattern: 3 occurrence(s), not seen in baseline
+  > upstream timed out (110: Connection timed out) while reading response header from upstream
+  > upstream timed out (110: Connection timed out) while reading response header from upstream
+  > upstream timed out (110: Connection timed out) while reading response header from upstream
+
+[에러] 시그니처 nginx-upstream-timeout — nginx upstream timed out (×3)
+  최초: 09:20:00 · 최종: 09:22:00 · 유닛: nginx · nginx-error
+  matched 3 time(s)
+  > upstream timed out (110: Connection timed out) while reading response header from upstream
+  > upstream timed out (110: Connection timed out) while reading response header from upstream
+  > upstream timed out (110: Connection timed out) while reading response header from upstream
+  힌트: Check upstream app latency/health; consider proxy_read_timeout
+
+[에러] 시그니처 systemd-unit-failed — systemd unit failed (×1)
+  최초: 09:40:00 · 최종: 09:40:00 · 유닛: myapp.service · journald
+  matched 1 time(s)
+  > myapp.service: Failed with result 'exit-code'.
+  힌트: systemctl status <unit>; journalctl -u <unit> -n 50
+
+[경고] 스파이크 error-rate — Overall error rate spiked (×50)
+  최초: 09:00:00 · 최종: 10:00:00 · all
+  50 error-level records (4.2/bucket) vs baseline 0.02/bucket — z=8.3, ×83.3
+
+[경고] 스파이크 dc0f257a9b2490f3 — GET <PATH> [2xx] (×48)
+  최초: 09:01:00 · 최종: 09:59:00 · 유닛: nginx · nginx-access
+  48 occurrences (4.0/bucket) vs baseline 0.69/bucket — z=6.6, ×5.8
+  > GET /api/list [2xx]
+  > GET /api/list [2xx]
+  > GET /api/list [2xx]
+
