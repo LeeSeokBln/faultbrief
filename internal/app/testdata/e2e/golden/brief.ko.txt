@@ -1,7 +1,7 @@
 FAULTBRIEF — 장애 브리핑
 분석 구간: 2026-07-07 09:00 → 2026-07-07 10:00 (베이스라인: 직전 24h0m0s)
 소스: journald ✓ (1) · syslog ✓ (69) · nginx-access ✓ (260) · nginx-error ✓ (3)
-레코드: 104 · 발견: 9
+레코드: 104 · 발견: 8
 
 [심각] 시그니처 oom-kill — OOM killer terminated a process (×2)
   최초: 09:12:00 · 최종: 09:14:00 · 유닛: kernel · syslog
@@ -52,11 +52,4 @@ FAULTBRIEF — 장애 브리핑
 [경고] 스파이크 error-rate — Overall error rate spiked (×50)
   최초: 09:00:00 · 최종: 10:00:00 · all
   50 error-level records (4.2/bucket) vs baseline 0.02/bucket — z=8.3, ×83.3
-
-[경고] 스파이크 dc0f257a9b2490f3 — GET <PATH> [2xx] (×48)
-  최초: 09:01:00 · 최종: 09:59:00 · 유닛: nginx · nginx-access
-  48 occurrences (4.0/bucket) vs baseline 0.69/bucket — z=6.6, ×5.8
-  > GET /api/list [2xx]
-  > GET /api/list [2xx]
-  > GET /api/list [2xx]
 

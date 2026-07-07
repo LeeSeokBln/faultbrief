@@ -63,35 +63,78 @@ func (fl fileLines) collect(ctx context.Context, from, to time.Time, emit func(m
 			}
 			r = zr
 		}
-		sc := bufio.NewScanner(r)
-		sc.Buffer(make([]byte, 0, 64*1024), 1024*1024)
-		for sc.Scan() {
-			line := sc.Text()
+		err = scanLines(r, maxLineBytes, func(b []byte) {
+			line := string(b)
 			if strings.TrimSpace(line) == "" {
-				continue
+				return
 			}
 			stats.Lines++
 			rec, err := parse(line)
 			if err != nil {
 				stats.Failed++
-				continue
+				return
 			}
 			stats.Parsed++
 			if !rec.TS.Before(from) && rec.TS.Before(to) {
 				emit(rec)
 			}
-		}
-		if err := sc.Err(); err != nil {
-			if zr != nil {
-				zr.Close()
-			}
-			f.Close()
-			return stats, fmt.Errorf("read %s: %w", p, err)
-		}
+		}, func() {
+			stats.Lines++
+			stats.Failed++
+		})
 		if zr != nil {
 			zr.Close()
 		}
 		f.Close()
+		if err != nil {
+			return stats, fmt.Errorf("read %s: %w", p, err)
+		}
 	}
 	return stats, nil
+}
+
+// maxLineBytes bounds a single log line. Longer lines are counted as parse
+// failures and skipped — one pathological line must not abort a source.
+const maxLineBytes = 4 * 1024 * 1024
+
+// scanLines reads r line by line, calling onLine for each complete line up
+// to max bytes and onOversize for lines exceeding it.
+func scanLines(r io.Reader, max int, onLine func([]byte), onOversize func()) error {
+	br := bufio.NewReaderSize(r, 64*1024)
+	buf := make([]byte, 0, 64*1024)
+	tooLong := false
+	for {
+		chunk, isPrefix, err := br.ReadLine()
+		if err != nil {
+			if err == io.EOF {
+				// bufio.ReadLine delivers a final unterminated line with
+				// isPrefix=false before EOF, so nothing is pending here
+				// unless the stream ended mid-oversize-line.
+				if tooLong {
+					onOversize()
+				} else if len(buf) > 0 {
+					onLine(buf)
+				}
+				return nil
+			}
+			return err
+		}
+		if !tooLong {
+			if len(buf)+len(chunk) > max {
+				tooLong = true
+			} else {
+				buf = append(buf, chunk...)
+			}
+		}
+		if isPrefix {
+			continue
+		}
+		if tooLong {
+			onOversize()
+		} else {
+			onLine(buf)
+		}
+		buf = buf[:0]
+		tooLong = false
+	}
 }

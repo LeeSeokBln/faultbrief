@@ -1,7 +1,6 @@
 package source
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -68,25 +67,25 @@ func (j *Journald) Collect(ctx context.Context, from, to time.Time, emit func(mo
 		return stats, fmt.Errorf("run journalctl: %w", err)
 	}
 	defer out.Close()
-	sc := bufio.NewScanner(out)
-	sc.Buffer(make([]byte, 0, 64*1024), 4*1024*1024)
-	for sc.Scan() {
-		line := sc.Bytes()
+	err = scanLines(out, maxLineBytes, func(line []byte) {
 		if len(line) == 0 {
-			continue
+			return
 		}
 		stats.Lines++
 		rec, err := parseJournalLine(line)
 		if err != nil {
 			stats.Failed++
-			continue
+			return
 		}
 		stats.Parsed++
 		if !rec.TS.Before(from) && rec.TS.Before(to) {
 			emit(rec)
 		}
-	}
-	if err := sc.Err(); err != nil {
+	}, func() {
+		stats.Lines++
+		stats.Failed++
+	})
+	if err != nil {
 		return stats, fmt.Errorf("read journalctl: %w", err)
 	}
 	return stats, nil

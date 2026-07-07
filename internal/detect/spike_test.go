@@ -137,3 +137,13 @@ func TestNginx5xxRateBelowMinRequests(t *testing.T) {
 		}
 	}
 }
+
+func TestNoSpikeForInfoTemplates(t *testing.T) {
+	// A healthy-traffic surge (info-level template) must not page anyone.
+	acc := buildAcc(t, 1, 120, "GET /healthz [2xx]", model.SevInfo)
+	for _, f := range Spikes(acc, DefaultParams()) {
+		if f.Kind == model.KindSpike && f.RuleID != "error-rate" && f.RuleID != "nginx-5xx-rate" {
+			t.Fatalf("info-severity template must not spike: %+v", f)
+		}
+	}
+}

@@ -5,6 +5,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -133,5 +134,31 @@ func TestSyslogCollectFiltersAndReadsGzip(t *testing.T) {
 	}
 	if stats.Lines != 4 || stats.Failed != 1 {
 		t.Errorf("stats = %+v, want Lines=4 Failed=1", stats)
+	}
+}
+
+func TestOversizedLineSkippedNotFatal(t *testing.T) {
+	dir := t.TempDir()
+	p := filepath.Join(dir, "syslog")
+	huge := strings.Repeat("x", maxLineBytes+100)
+	content := "Jul  7 08:30:00 web1 app: before huge line\n" +
+		huge + "\n" +
+		"Jul  7 08:45:00 web1 app: after huge line\n"
+	if err := os.WriteFile(p, []byte(content), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	s := NewSyslogFile([]string{p})
+	from := time.Date(2026, 7, 7, 8, 0, 0, 0, time.UTC)
+	to := time.Date(2026, 7, 7, 9, 0, 0, 0, time.UTC)
+	var got []model.LogRecord
+	stats, err := s.Collect(context.Background(), from, to, func(r model.LogRecord) { got = append(got, r) })
+	if err != nil {
+		t.Fatalf("oversized line must not abort the source: %v", err)
+	}
+	if len(got) != 2 {
+		t.Fatalf("records after the huge line must still parse; got %d, want 2", len(got))
+	}
+	if stats.Failed != 1 {
+		t.Errorf("oversized line should count as 1 failure, stats=%+v", stats)
 	}
 }

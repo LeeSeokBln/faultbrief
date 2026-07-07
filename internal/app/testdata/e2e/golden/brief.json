@@ -164,24 +164,6 @@
       "source": "all",
       "first_ts": "2026-07-07T09:00:00Z",
       "last_ts": "2026-07-07T10:00:00Z"
-    },
-    {
-      "kind": "spike",
-      "rule_id": "dc0f257a9b2490f3",
-      "severity": "warning",
-      "title": "GET \u003cPATH\u003e [2xx]",
-      "detail": "48 occurrences (4.0/bucket) vs baseline 0.69/bucket — z=6.6, ×5.8",
-      "count": 48,
-      "score": 6.611111111111111,
-      "source": "nginx-access",
-      "unit": "nginx",
-      "samples": [
-        "GET /api/list [2xx]",
-        "GET /api/list [2xx]",
-        "GET /api/list [2xx]"
-      ],
-      "first_ts": "2026-07-07T09:01:00Z",
-      "last_ts": "2026-07-07T09:59:00Z"
     }
   ]
 }

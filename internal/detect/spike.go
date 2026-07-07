@@ -26,7 +26,7 @@ func Spikes(acc *baseline.Accumulator, p Params) []model.Finding {
 	sort.Strings(ids)
 	for _, id := range ids {
 		st := acc.Analysis[id]
-		if st.Count < p.MinCount {
+		if st.Count < p.MinCount || st.Severity < p.SpikeMinSev {
 			continue
 		}
 		bb, ok := acc.BaselineBuckets[id]

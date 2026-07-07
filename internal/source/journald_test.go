@@ -73,3 +73,24 @@ func TestJournaldRunnerError(t *testing.T) {
 		t.Fatal("expected error when journalctl cannot run")
 	}
 }
+
+func TestJournaldOversizedLineSkipped(t *testing.T) {
+	huge := strings.Repeat("y", maxLineBytes+100)
+	out := `{"__REALTIME_TIMESTAMP":"1783413123000000","PRIORITY":"3","MESSAGE":"real entry","_SYSTEMD_UNIT":"a.service"}` + "\n" +
+		huge + "\n" +
+		`{"__REALTIME_TIMESTAMP":"1783413125000000","PRIORITY":"6","MESSAGE":"after huge"}` + "\n"
+	j := &Journald{Runner: &fakeRunner{output: out}}
+	from := time.Date(2026, 7, 7, 8, 0, 0, 0, time.UTC)
+	to := time.Date(2026, 7, 7, 9, 0, 0, 0, time.UTC)
+	var got []model.LogRecord
+	stats, err := j.Collect(context.Background(), from, to, func(r model.LogRecord) { got = append(got, r) })
+	if err != nil {
+		t.Fatalf("oversized journal line must not abort the source: %v", err)
+	}
+	if len(got) != 2 {
+		t.Fatalf("got %d records, want 2 (entries around the huge line)", len(got))
+	}
+	if stats.Failed != 1 {
+		t.Errorf("stats=%+v, want Failed=1", stats)
+	}
+}
