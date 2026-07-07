@@ -1,7 +1,8 @@
 //go:build ignore
 
 // Generates the e2e fixtures. Run from repo root:
-//   go run internal/app/testdata/e2e/gen.go
+//
+//	go run internal/app/testdata/e2e/gen.go
 package main
 
 import (
