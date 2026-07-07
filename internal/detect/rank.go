@@ -25,7 +25,7 @@ func Rank(fs []model.Finding) {
 
 // FilterMinSeverity drops findings below min.
 func FilterMinSeverity(fs []model.Finding, min model.Severity) []model.Finding {
-	out := fs[:0:0]
+	out := fs[:0]
 	for _, f := range fs {
 		if f.Severity >= min {
 			out = append(out, f)
