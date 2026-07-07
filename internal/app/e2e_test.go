@@ -86,7 +86,10 @@ func TestE2EGoldenJSON(t *testing.T) {
 // The e2e scenario must produce all five expected finding classes.
 func TestE2EFindingClasses(t *testing.T) {
 	var out, errOut bytes.Buffer
-	Run(context.Background(), e2eOptions(&out, &errOut, "text", "en"))
+	code := Run(context.Background(), e2eOptions(&out, &errOut, "text", "en"))
+	if code != ExitFindings {
+		t.Fatalf("exit = %d, want 1; stderr: %s", code, errOut.String())
+	}
 	s := out.String()
 	for _, want := range []string{
 		"oom-kill",                  // syslog signature
@@ -108,19 +111,25 @@ func TestE2EFindingClasses(t *testing.T) {
 func TestE2ECacheSuppressesNoveltyOnSecondRun(t *testing.T) {
 	dir := t.TempDir()
 	cachePath := filepath.Join(dir, "patterns.json")
-	run := func() string {
+	run := func() (int, string) {
 		var out, errOut bytes.Buffer
 		o := e2eOptions(&out, &errOut, "text", "en")
 		o.UseCache = true
 		o.CachePath = cachePath
-		Run(context.Background(), o)
-		return out.String()
+		code := Run(context.Background(), o)
+		return code, out.String()
 	}
-	first := run()
+	code1, first := run()
+	if code1 != ExitFindings {
+		t.Fatalf("first run exit = %d, want 1", code1)
+	}
 	if !strings.Contains(first, "certificate verify failed") {
 		t.Fatalf("first run should report novelty:\n%s", first)
 	}
-	second := run()
+	code2, second := run()
+	if code2 != ExitFindings {
+		t.Fatalf("second run exit = %d, want 1", code2)
+	}
 	if strings.Contains(second, "new pattern: 4 occurrence") {
 		t.Errorf("second run must suppress cached novelty:\n%s", second)
 	}
