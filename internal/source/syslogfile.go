@@ -1,12 +1,8 @@
 package source
 
 import (
-	"bufio"
-	"compress/gzip"
 	"context"
 	"fmt"
-	"io"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -26,53 +22,10 @@ func NewSyslogFile(paths []string) *SyslogFile { return &SyslogFile{Paths: paths
 func (s *SyslogFile) Name() string { return "syslog" }
 
 func (s *SyslogFile) Collect(ctx context.Context, from, to time.Time, emit func(model.LogRecord)) (Stats, error) {
-	var stats Stats
 	ref := to
-	for _, p := range s.Paths {
-		if err := ctx.Err(); err != nil {
-			return stats, err
-		}
-		f, err := os.Open(p)
-		if err != nil {
-			return stats, fmt.Errorf("open %s: %w", p, err)
-		}
-		defer f.Close()
-		var r io.Reader = f
-		var zr io.Closer
-		if strings.HasSuffix(p, ".gz") {
-			gz, err := gzip.NewReader(f)
-			if err != nil {
-				return stats, fmt.Errorf("gzip %s: %w", p, err)
-			}
-			r = gz
-			zr = gz
-		}
-		if zr != nil {
-			defer zr.Close()
-		}
-		sc := bufio.NewScanner(r)
-		sc.Buffer(make([]byte, 0, 64*1024), 1024*1024)
-		for sc.Scan() {
-			line := sc.Text()
-			if strings.TrimSpace(line) == "" {
-				continue
-			}
-			stats.Lines++
-			rec, err := parseSyslogLine(line, ref)
-			if err != nil {
-				stats.Failed++
-				continue
-			}
-			stats.Parsed++
-			if !rec.TS.Before(from) && rec.TS.Before(to) {
-				emit(rec)
-			}
-		}
-		if err := sc.Err(); err != nil {
-			return stats, fmt.Errorf("read %s: %w", p, err)
-		}
-	}
-	return stats, nil
+	return fileLines{paths: s.Paths}.collect(ctx, from, to, emit, func(line string) (model.LogRecord, error) {
+		return parseSyslogLine(line, ref)
+	})
 }
 
 var (

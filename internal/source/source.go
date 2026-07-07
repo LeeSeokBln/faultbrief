@@ -3,7 +3,13 @@
 package source
 
 import (
+	"bufio"
+	"compress/gzip"
 	"context"
+	"fmt"
+	"io"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/LeeSeokBln/faultbrief/internal/model"
@@ -28,4 +34,54 @@ func (s Stats) FailRate() float64 {
 type Source interface {
 	Name() string
 	Collect(ctx context.Context, from, to time.Time, emit func(model.LogRecord)) (Stats, error)
+}
+
+// fileLines walks plain/.gz files line by line and applies a parser.
+type fileLines struct {
+	paths []string
+}
+
+func (fl fileLines) collect(ctx context.Context, from, to time.Time, emit func(model.LogRecord), parse func(string) (model.LogRecord, error)) (Stats, error) {
+	var stats Stats
+	for _, p := range fl.paths {
+		if err := ctx.Err(); err != nil {
+			return stats, err
+		}
+		f, err := os.Open(p)
+		if err != nil {
+			return stats, fmt.Errorf("open %s: %w", p, err)
+		}
+		var r io.Reader = f
+		if strings.HasSuffix(p, ".gz") {
+			zr, err := gzip.NewReader(f)
+			if err != nil {
+				f.Close()
+				return stats, fmt.Errorf("gzip %s: %w", p, err)
+			}
+			r = zr
+		}
+		sc := bufio.NewScanner(r)
+		sc.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+		for sc.Scan() {
+			line := sc.Text()
+			if strings.TrimSpace(line) == "" {
+				continue
+			}
+			stats.Lines++
+			rec, err := parse(line)
+			if err != nil {
+				stats.Failed++
+				continue
+			}
+			stats.Parsed++
+			if !rec.TS.Before(from) && rec.TS.Before(to) {
+				emit(rec)
+			}
+		}
+		f.Close()
+		if err := sc.Err(); err != nil {
+			return stats, fmt.Errorf("read %s: %w", p, err)
+		}
+	}
+	return stats, nil
 }
