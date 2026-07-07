@@ -51,15 +51,16 @@ func (fl fileLines) collect(ctx context.Context, from, to time.Time, emit func(m
 		if err != nil {
 			return stats, fmt.Errorf("open %s: %w", p, err)
 		}
-		defer f.Close()
 
 		var r io.Reader = f
+		var zr *gzip.Reader
 		if strings.HasSuffix(p, ".gz") {
-			zr, err := gzip.NewReader(f)
+			var err error
+			zr, err = gzip.NewReader(f)
 			if err != nil {
+				f.Close()
 				return stats, fmt.Errorf("gzip %s: %w", p, err)
 			}
-			defer zr.Close()
 			r = zr
 		}
 		sc := bufio.NewScanner(r)
@@ -81,8 +82,16 @@ func (fl fileLines) collect(ctx context.Context, from, to time.Time, emit func(m
 			}
 		}
 		if err := sc.Err(); err != nil {
+			if zr != nil {
+				zr.Close()
+			}
+			f.Close()
 			return stats, fmt.Errorf("read %s: %w", p, err)
 		}
+		if zr != nil {
+			zr.Close()
+		}
+		f.Close()
 	}
 	return stats, nil
 }
