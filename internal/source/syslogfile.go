@@ -36,14 +36,19 @@ func (s *SyslogFile) Collect(ctx context.Context, from, to time.Time, emit func(
 		if err != nil {
 			return stats, fmt.Errorf("open %s: %w", p, err)
 		}
+		defer f.Close()
 		var r io.Reader = f
+		var zr io.Closer
 		if strings.HasSuffix(p, ".gz") {
-			zr, err := gzip.NewReader(f)
+			gz, err := gzip.NewReader(f)
 			if err != nil {
-				f.Close()
 				return stats, fmt.Errorf("gzip %s: %w", p, err)
 			}
-			r = zr
+			r = gz
+			zr = gz
+		}
+		if zr != nil {
+			defer zr.Close()
 		}
 		sc := bufio.NewScanner(r)
 		sc.Buffer(make([]byte, 0, 64*1024), 1024*1024)
@@ -63,7 +68,6 @@ func (s *SyslogFile) Collect(ctx context.Context, from, to time.Time, emit func(
 				emit(rec)
 			}
 		}
-		f.Close()
 		if err := sc.Err(); err != nil {
 			return stats, fmt.Errorf("read %s: %w", p, err)
 		}
