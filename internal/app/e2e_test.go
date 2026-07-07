@@ -44,7 +44,9 @@ func checkGolden(t *testing.T, got []byte, goldenName string) {
 	t.Helper()
 	golden := filepath.Join("testdata", "e2e", "golden", goldenName)
 	if *update {
-		os.MkdirAll(filepath.Dir(golden), 0o755)
+		if err := os.MkdirAll(filepath.Dir(golden), 0o755); err != nil {
+			t.Fatal(err)
+		}
 		if err := os.WriteFile(golden, got, 0o644); err != nil {
 			t.Fatal(err)
 		}
